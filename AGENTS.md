@@ -2,15 +2,26 @@
 
 ## Repo state (important)
 
-Design-phase repo — **no app code or tests exist yet** (no `.cs`, `.csproj`, or `.sln` files). No CI. What exists:
+Design-phase repo — **no app code beyond the domain model, and no CI yet**. What exists:
 
-- `agents/` — OpenClaw agent manifests, prompts, and workflow YAMLs (the only functional deliverable)
-- `src/Directory.Build.props` — C# build config only; pins `net10.0` / C# 14 / warnings-as-errors for all future projects
+- `agents/` — OpenClaw agent manifests, prompts, and workflow YAMLs (functional deliverable)
+- `src/MealPrepPlanner.Domain/` — pure C# domain project (`MealPrepPlanner.Domain.csproj`); aggregates, value objects, domain events, and deterministic services only, zero external dependencies
+- `tests/MealPrepPlanner.Tests/` — unified xUnit v3 suite (single suite for unit + future integration tests); `Unit/` now, `Integration/` later, same project
+- `src/MealPrepPlanner.slnx` — solution file (XML `.slnx`); references the domain and test projects
+- `src/Directory.Build.props` — C# build config; pins `net10.0` / C# 14 / warnings-as-errors for all projects under `src/` (tests import it via `tests/Directory.Build.props`)
 - `docs/architecture/` and `docs/decisions/` — design docs and ADRs (source of truth for planned behavior)
-- `.editorconfig` — formatting: `.cs` 4-space, YAML/JSON/MD 2-space
-- `README.md` — describes the *aspirational* full stack; `tests/`, `infrastructure/`, `.github/`, and app projects are planned but do not exist. Its quick-start commands (`nix develop`, `docker compose`, `dotnet ef`, `dotnet run`) cannot run yet.
+- `.editorconfig` — formatting: `.cs` 4-space, YAML/JSON/MD 2-space; forbids trailing commas on the last element of multiline lists
+- `.gitignore` — ignores .NET build output (`bin/`, `obj/`), IDE/OS files
+- `README.md` — describes the *aspirational* full stack; `infrastructure/`, `.github/`, and web/app projects are planned but do not exist. Its quick-start commands (`nix develop`, `docker compose`, `dotnet ef`, `dotnet run`) cannot run yet.
 
-There are **no commits yet**. There is no lint/test/build/typecheck command to run — `dotnet build` has no projects to build.
+Build and test:
+
+```sh
+dotnet build src/MealPrepPlanner.slnx
+dotnet test  src/MealPrepPlanner.slnx
+```
+
+The test project is an MTP executable (`xunit.v3`); it needs `DOTNET_ROOT` exported on this NixOS machine or the native apphost cannot find the runtime. There is no lint/typecheck command beyond `dotnet format` (reliable for whitespace, but it silently skips the two .editorconfig IDE style rules — verify those manually when editing).
 
 ## OpenClaw agents (`agents/`)
 
