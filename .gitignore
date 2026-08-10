@@ -1,0 +1,65 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+*.userprefs
+*.pdb
+*.exe
+*.dll
+*.so
+*.dylib
+*.nupkg
+*.snupkg
+*.cache
+*.local
+*.log
+*.tmp
+
+# Test results
+[Tt]est[Rr]esult/
+*.trx
+coverage/
+*.coverage
+*.coveragexml
+
+# IDE
+.vs/
+.idea/
+.vscode/
+*.swp
+*.sln.docstates
+
+# NuGet
+*.nupkg.metadata
+*.nuspec
+packages/
+*.nupkg
+global.json.bak
+
+# .NET
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.project.json.ide
+
+# Rider
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+*.pfx
+*.snk
+
+# OpenClaw / agent runtime
+.python-version
+venv/
+.venv/
+node_modules/
