@@ -16,11 +16,13 @@ dotnet_separate_import_directive_groups = false
 
 # C# formatting
 csharp_new_line_before_open_brace = all
+csharp_style_trailing_comma_when_multiline = false:warning
 csharp_new_line_before_else = true
 csharp_new_line_before_catch = true
 csharp_new_line_before_finally = true
 csharp_indent_case_contents = true
 csharp_indent_switch_labels = true
+csharp_prefer_braces = false:warning
 
 # Naming
 dotnet_naming_rule.constants_should_be_pascal_case.severity = warning
