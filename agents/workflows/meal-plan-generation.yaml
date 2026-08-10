@@ -1,0 +1,200 @@
+# OpenClaw Workflow: Meal Plan Generation
+# Triggered by Telegram /generate command
+
+name: meal-plan-generation
+trigger:
+  type: event
+  source: telegram.command
+  filters:
+    command: ["/generate", "/plan"]
+
+agents:
+  meal_planner:
+    role: "Meal Planner"
+    model: "gpt-4.1"
+    prompts:
+      system: "../meal-planner/prompts/system.txt"
+    temperature: 0.7
+    max_tokens: 4000
+    skills:
+      - get_preferences
+      - get_pantry
+      - search_recipes
+      - get_recipe
+      - calculate_nutrition
+      - validate_meal_plan_nutrition
+      - validate_constraints
+      - save_meal_plan_draft
+    memory:
+      enabled: true
+      scope: workflow
+
+  nutrition_reviewer:
+    role: "Nutrition Reviewer"
+    model: "gpt-4.1"
+    prompts:
+      system: "../nutrition-reviewer/prompts/system.txt"
+    temperature: 0.2
+    max_tokens: 2000
+    skills:
+      - get_preferences
+      - calculate_nutrition
+      - validate_meal_plan_nutrition
+      - validate_constraints
+      - find_substitutions
+    memory:
+      enabled: true
+      scope: workflow
+
+  recipe_generator:
+    role: "Recipe Generator"
+    model: "gpt-4.1"
+    prompts:
+      system: "../recipe-generator/prompts/system.txt"
+    temperature: 0.8
+    max_tokens: 4000
+    skills:
+      - get_recipe
+      - calculate_nutrition
+      - find_substitutions
+      - save_meal_plan_draft
+    memory:
+      enabled: true
+      scope: workflow
+
+  shopping_optimizer:
+    role: "Shopping Optimizer"
+    model: "gpt-4.1"
+    prompts:
+      system: "../shopping-optimizer/prompts/system.txt"
+    temperature: 0.3
+    max_tokens: 2000
+    skills:
+      - generate_shopping_list
+      - estimate_cost
+      - get_pantry
+    memory:
+      enabled: true
+      scope: workflow
+
+  meal_prep_optimizer:
+    role: "Meal Prep Optimizer"
+    model: "gpt-4.1"
+    prompts:
+      system: "../meal-prep-optimizer/prompts/system.txt"
+    temperature: 0.4
+    max_tokens: 3000
+    skills:
+      - get_preferences
+      - get_recipe
+      - calculate_nutrition
+      - save_meal_plan_draft
+    memory:
+      enabled: true
+      scope: workflow
+
+workflow:
+  - id: load_context
+    run: tool.get_preferences
+    output: user_prefs
+
+  - id: load_pantry
+    run: tool.get_pantry
+    output: pantry
+
+  - id: generate_draft
+    run: agent.meal_planner
+    input:
+      preferences: "{{steps.load_context.output}}"
+      pantry: "{{steps.load_pantry.output}}"
+      command: "{{trigger.text}}"
+    output: draft_plan
+
+  - id: validate_constraints
+    run: tool.validate_constraints
+    input:
+      draft: "{{steps.generate_draft.output.plan}}"
+      preferences: "{{steps.load_context.output}}"
+    output: constraint_review
+
+  - id: validate_nutrition
+    run: agent.nutrition_reviewer
+    input:
+      draft: "{{steps.generate_draft.output.plan}}"
+      goals: "{{steps.load_context.output.nutrition_goals}}"
+    output: nutrition_review
+
+  - id: fix_draft
+    run: agent.meal_planner
+    condition: "{{steps.validate_nutrition.output.approved == false || steps.validate_constraints.output.valid == false}}"
+    input:
+      draft: "{{steps.generate_draft.output.plan}}"
+      review: "{{steps.validate_nutrition.output}}"
+      constraint_review: "{{steps.validate_constraints.output}}"
+      preferences: "{{steps.load_context.output}}"
+    output: draft_plan
+    retries: 2
+
+  - id: generate_recipes
+    run: agent.recipe_generator
+    input:
+      draft: "{{steps.fix_draft.output.plan || steps.generate_draft.output.plan}}"
+      preferences: "{{steps.load_context.output}}"
+    output: final_draft
+
+  - id: optimize_shopping
+    run: agent.shopping_optimizer
+    input:
+      meal_plan: "{{steps.generate_recipes.output.draft}}"
+      pantry: "{{steps.load_pantry.output}}"
+      supermarkets: "{{steps.load_context.output.preferred_supermarkets}}"
+    output: shopping_list
+
+  - id: generate_prep_schedule
+    run: agent.meal_prep_optimizer
+    input:
+      draft: "{{steps.generate_recipes.output.draft}}"
+    output: prep_schedule
+
+  - id: save_draft
+    run: tool.save_meal_plan_draft
+    input:
+      household_id: "{{steps.load_context.output.household_id}}"
+      draft: "{{steps.generate_recipes.output.draft}}"
+      workflow_id: "{{trigger.workflow_id}}"
+      metadata:
+        generated_by_agents: ["meal_planner", "nutrition_reviewer", "recipe_generator", "shopping_optimizer", "meal_prep_optimizer"]
+    output: saved_plan
+
+  - id: notify_user
+    run: tool.send_telegram_message
+    input:
+      chat_id: "{{trigger.chat_id}}"
+      message: |
+        Your meal plan is ready!
+
+        {{steps.generate_recipes.output.summary}}
+
+        Estimated cost: {{steps.optimize_shopping.output.total_cost}}
+        Shopping items: {{steps.optimize_shopping.output.item_count}}
+
+        Prep schedule: {{steps.generate_prep_schedule.output.summary}}
+
+        View plan: {{steps.save_draft.output.url}}
+
+policies:
+  retries:
+    max_attempts: 3
+    backoff: exponential
+  timeout: 120
+
+logging:
+  level: INFO
+  include:
+    - step_id
+    - agent_decision
+    - tool_response
+    - reasoning
+    - execution_time
+    - input_context
+    - output_decision

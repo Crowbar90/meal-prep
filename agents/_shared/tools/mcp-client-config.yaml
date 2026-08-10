@@ -1,0 +1,29 @@
+# MCP Client Configuration for OpenClaw Agents
+# This file is loaded by OpenClaw to configure the MCP client
+
+server:
+  url: ${MCP_SERVER_URL}
+  auth:
+    type: api_key
+    header: X-Api-Key
+    value: ${MCP_API_KEY}
+
+  # Connection settings
+  timeout: 30
+  retries: 3
+
+  # Headers sent with every tool call
+  default_headers:
+    X-Workflow-Id: ${OPENCLAW_WORKFLOW_ID}
+    X-Agent-Name: ${OPENCLAW_AGENT_NAME}
+    User-Agent: OpenClaw-Agent/1.0
+
+# Tool timeout overrides (seconds)
+tool_timeouts:
+  calculate_nutrition: 10
+  validate_meal_plan_nutrition: 15
+  generate_shopping_list: 10
+  search_recipes: 5
+  estimate_cost: 10
+  find_substitutions: 8
+  save_meal_plan_draft: 5

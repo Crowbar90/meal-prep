@@ -1,0 +1,19 @@
+name: meal-planner
+role: "Weekly Meal Planner"
+model: gpt-4.1
+prompts:
+  system: "prompts/system.txt"
+temperature: 0.7
+max_tokens: 4000
+skills:
+  - get_preferences
+  - get_pantry
+  - search_recipes
+  - get_recipe
+  - calculate_nutrition
+  - validate_meal_plan_nutrition
+  - validate_constraints
+  - save_meal_plan_draft
+memory:
+  enabled: true
+  scope: workflow

@@ -1,0 +1,16 @@
+name: nutrition-reviewer
+role: "Nutrition Validator"
+model: gpt-4.1
+prompts:
+  system: "prompts/system.txt"
+temperature: 0.2
+max_tokens: 2000
+skills:
+  - get_preferences
+  - calculate_nutrition
+  - validate_meal_plan_nutrition
+  - validate_constraints
+  - find_substitutions
+memory:
+  enabled: true
+  scope: workflow
