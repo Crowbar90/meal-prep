@@ -1,0 +1,59 @@
+name: PR Build & Test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Cancel in-progress runs for the same PR; keep the latest push for main.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # Cache NuGet packages. The hash input covers build-config and project
+      # files so config bumps intentionally invalidate the cache.
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('src/Directory.Build.props', 'tests/Directory.Build.props', '**/*.csproj', 'src/MealPrepPlanner.slnx') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore src/MealPrepPlanner.slnx
+
+      # Format check runs before Build so formatting violations fail fast
+      # without incurring a compile. `dotnet format` is the only lint
+      # available per AGENTS.md (it covers whitespace rules; the two IDE-only
+      # .editorconfig rules are still manual review).
+      - name: Verify formatting
+        run: dotnet format src/MealPrepPlanner.slnx --verify-no-changes --no-restore
+
+      - name: Build (Release)
+        run: dotnet build src/MealPrepPlanner.slnx --no-restore -c Release
+
+      # Test step is intentionally minimal. Coverage + TRX report uploads
+      # are deferred until xunit.v3 ships an MTP v2-compatible stable
+      # release (tracked separately). See AGENTS.md.
+      - name: Test (Release)
+        run: dotnet test src/MealPrepPlanner.slnx --no-build -c Release
