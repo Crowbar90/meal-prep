@@ -22,6 +22,6 @@ Standard coding agent. Full tool access. Front-loads repo invariants (read AGENT
 | `docs-compliance-checker` | `opencode-go/mimo-v2.5` | Verify an implementation matches `docs/` (architecture + decisions); report drift |
 | `docs-writer` | `opencode-go/mimo-v2.5` | Create or amend `docs/`, `README.md`, `AGENTS.md` (propose-then-apply) |
 | `prompt-maintainer` | `opencode-go/mimo-v2.5` | Keep agent prompts and the MCP tool catalog (`docs/architecture/mcp-tools.md`) in sync |
-| `git-helper` | `opencode-go/mimo-v2.5` | Draft commit messages and PR descriptions from `git diff`/`git log`; never edits code |
+| `git-helper` | `opencode-go/mimo-v2.5` | Draft commit messages and PR descriptions; runs `git` for inspection, asks before writes (commit, push, reset) |
 
 Invoke a subagent with `@name`, or let `coder` delegate via the Task tool.
