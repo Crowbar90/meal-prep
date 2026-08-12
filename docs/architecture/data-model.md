@@ -84,18 +84,20 @@ Consolidated household preferences. JSONB for flexibility.
 |--------|------|-------------|-------------|
 | `id` | UUID | PK | Unique identifier |
 | `household_id` | UUID | FK → households, UNIQUE | One per household |
-| `dietary_restrictions` | JSONB | NOT NULL DEFAULT '[]' | `["vegan", "nut-free", "gluten-free"]` |
+| `dietary_restrictions` | text[] | NOT NULL DEFAULT '{}' | `['vegan', 'nut-free', 'gluten-free']` |
 | `nutrition_goals` | JSONB | NOT NULL DEFAULT '{}' | `{"calories_per_day": 2100, "protein_per_day": 120}` |
-| `equipment` | JSONB | NOT NULL DEFAULT '[]' | `["instant_pot", "air_fryer", "oven"]` |
+| `equipment` | text[] | NOT NULL DEFAULT '{}' | `['instant_pot', 'air_fryer', 'oven']` |
 | `max_cooking_time_minutes` | INT | DEFAULT 60 | Per-meal time ceiling |
 | `weekly_budget` | DECIMAL(8,2) | | Weekly grocery budget |
-| `preferred_supermarkets` | JSONB | DEFAULT '[]' | `["aldi", "lidl"]` |
+| `preferred_supermarkets` | text[] | DEFAULT '{}' | `['aldi', 'lidl']` |
 | `food_preferences` | JSONB | DEFAULT '{}' | `{"liked_cuisines": [...], "disliked_ingredients": [...]}` |
 | `created_at` | TIMESTAMPTZ | DEFAULT NOW() | |
 | `updated_at` | TIMESTAMPTZ | DEFAULT NOW() | |
 
 **Indexes:**
 - GIN index on `dietary_restrictions`
+- GIN index on `equipment`
+- GIN index on `preferred_supermarkets`
 - GIN index on `food_preferences`
 
 ### `ingredients`
@@ -109,7 +111,7 @@ Canonical ingredient reference with base nutritional data.
 | `category` | VARCHAR(50) | | "protein", "vegetable", "grain", "dairy", etc. |
 | `default_unit` | VARCHAR(20) | NOT NULL | "g", "ml", "piece", "tbsp" |
 | `nutrition_per_100g` | JSONB | NOT NULL | `{"calories": 120, "protein": 9, "carbs": 0, "fat": 8, ...}` |
-| `allergens` | JSONB | DEFAULT '[]' | `["peanuts", "gluten"]` |
+| `allergens` | text[] | DEFAULT '{}' | `['peanuts', 'gluten']` |
 | `created_at` | TIMESTAMPTZ | DEFAULT NOW() | |
 
 **Indexes:**
@@ -130,8 +132,8 @@ Recipe catalog. Instructions and metadata.
 | `cook_time_minutes` | INT | NOT NULL | Cook time |
 | `total_time_minutes` | INT | GENERATED | `prep_time + cook_time` |
 | `base_servings` | INT | NOT NULL DEFAULT 2 | Original recipe yield |
-| `equipment_needed` | JSONB | DEFAULT '[]' | `["oven", "knife"]` |
-| `tags` | JSONB | DEFAULT '[]' | `["vegan", "italian", "quick"]` |
+| `equipment_needed` | text[] | DEFAULT '{}' | `['oven', 'knife']` |
+| `tags` | text[] | DEFAULT '{}' | `['vegan', 'italian', 'quick']` |
 | `source` | VARCHAR(50) | | "user", "ai_generated", "imported" |
 | `created_by` | UUID | FK → households | Null for system recipes |
 | `created_at` | TIMESTAMPTZ | DEFAULT NOW() | |
@@ -375,6 +377,10 @@ Raw AI agent inputs and outputs for debugging.
   "max_spice_level": 3
 }
 ```
+
+### Scalar lists vs JSONB
+
+Columns that are **flat lists of scalars** (allergens, tags, equipment, dietary restrictions, preferred supermarkets) are stored as PostgreSQL `text[]` rather than JSONB arrays. Set-membership queries (`WHERE 'peanuts' = ANY(allergens)`, `WHERE tags && ARRAY['vegan','quick']`) are directly indexable with a GIN on the array and avoid the JSONB decode cost. JSONB is reserved for **structured documents** with mixed types or named fields: `nutrition_per_100g`, `nutrition_goals`, `food_preferences`, `meal_plans.nutrition_summary`, and the decision-context payloads on `decision_events`. The split keeps query patterns simple and GIN-index coverage explicit per column.
 
 ---
 

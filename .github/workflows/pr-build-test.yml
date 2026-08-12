@@ -35,9 +35,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('src/Directory.Build.props', 'tests/Directory.Build.props', '**/*.csproj', 'src/MealPrepPlanner.slnx') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('src/Directory.Build.props', 'tests/Directory.Build.props', '**/*.csproj', 'src/MealPrepPlanner.slnx', 'src/.config/dotnet-tools.json') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
+
+      # Restore local tools (currently just dotnet-ef 10.0.11) before any
+      # build/test steps so CI failures point at the right tool version.
+      - name: Restore local tools
+        run: dotnet tool restore --tool-manifest src/.config/dotnet-tools.json
 
       - name: Restore
         run: dotnet restore src/MealPrepPlanner.slnx
