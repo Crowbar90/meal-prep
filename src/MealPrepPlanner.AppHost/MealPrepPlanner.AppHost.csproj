@@ -12,15 +12,17 @@
   -->
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="13.4.6" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.4.6" />
   </ItemGroup>
 
   <ItemGroup>
     <!--
-      No ProjectReferences today. The AppHost orchestrates nothing yet; once a
-      runnable service project lands (e.g. MealPrepPlanner.Api), reference it
-      here so the Aspire SDK generates a strongly-typed
-      Projects.MealPrepPlanner_Api reference and the AppHost can call
-      builder.AddProject<Projects.MealPrepPlanner_Api>(...).
+      No ProjectReferences today. The AppHost orchestrates a Postgres 18
+      container only; once a runnable service project lands (e.g.
+      MealPrepPlanner.Api, which will consume MealPrepPlanner.Dal), reference
+      it here so the Aspire SDK generates a strongly-typed Projects.<Name>
+      reference and the AppHost can call
+      builder.AddProject<Projects.MealPrepPlanner_Api>(...).WithReference(...).
     -->
   </ItemGroup>
 

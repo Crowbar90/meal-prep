@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="MealPrepPlanner.ServiceDefaults/MealPrepPlanner.ServiceDefaults.csproj" />
   <Project Path="MealPrepPlanner.Domain/MealPrepPlanner.Domain.csproj" />
+  <Project Path="MealPrepPlanner.Dal/MealPrepPlanner.Dal.csproj" />
   <Project Path="MealPrepPlanner.AppHost/MealPrepPlanner.AppHost.csproj" />
   <Project Path="../tests/MealPrepPlanner.Tests/MealPrepPlanner.Tests.csproj" />
 </Solution>

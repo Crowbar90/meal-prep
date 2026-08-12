@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>MealPrepPlanner.Dal</RootNamespace>
+    <AssemblyName>MealPrepPlanner.Dal</AssemblyName>
+  </PropertyGroup>
+
+  <!--
+    Persistence layer. Contains the EF Core DbContext, entity configurations,
+    and migrations for the schema documented in docs/architecture/data-model.md.
+
+    Constraints:
+    - Zero domain logic. Pure mapping + migrations only.
+    - Depends only on the Domain project and EF Core / Npgsql / EFCore.NamingConventions packages.
+    - No reference to the (planned) Infrastructure project; this project IS the persistence
+      slice of that future boundary.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\MealPrepPlanner.Domain\MealPrepPlanner.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.11" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
+  </ItemGroup>
+
+  <!--
+    Aspire.Npgsql.EntityFrameworkCore.PostgreSQL (13.4.6) is intentionally NOT referenced
+    from this project. The EnrichNpgsqlDbContext call (which adds retries, health checks,
+    OpenTelemetry) is a service-host concern; it belongs in MealPrepPlanner.Api's
+    Program.cs, not here. See ServiceCollectionExtensions.cs for the registration helper.
+  -->
+
+</Project>
