@@ -23,6 +23,12 @@ dotnet test  src/MealPrepPlanner.slnx
 
 The test project is an MTP executable (`xunit.v3`); it needs `DOTNET_ROOT` exported on this NixOS machine or the native apphost cannot find the runtime. There is no lint/typecheck command beyond `dotnet format` (reliable for whitespace, but it silently skips the two .editorconfig IDE style rules — verify those manually when editing).
 
+## Documentation is the source of truth
+
+- **`docs/` is the source of truth.** Before implementing anything, read `docs/architecture/` and `docs/decisions/` and treat them as authoritative for behavior, constraints, and tech choices. Never build against assumptions that contradict them.
+- **ADRs are final.** The contents of `docs/decisions/` are final. If user input, constraints, new developments, or anything else contradicts an ADR, stop and ask the user — never decide unilaterally.
+- **Keep docs in sync.** Plan each implementation against the docs, then verify the result against them. When an implementation reveals the docs are stale or need amending, propose the doc/README update to the user and apply it only after they approve.
+
 ## OpenClaw agents (`agents/`)
 
 OpenClaw runs **externally** (separate host/namespace); this directory is a config package it consumes via submodule/ConfigMap/volume mount. Per-agent layout:
@@ -53,4 +59,4 @@ Conventions (see `agents/README.md` for the full schema):
 - Determinism (nutrition, budget, validation) belongs to the C# backend; creativity belongs to agents.
 - Backend targets **C# 14 / .NET 10 (ASP.NET Core 10)**, pinned in `src/Directory.Build.props` (`net10.0`, `LangVersion 14`, Nullable, ImplicitUsings, `TreatWarningsAsErrors`). Any project added under `src/` inherits this automatically.
 - Planned but unimplemented stack: PostgreSQL 16, Redis, MassTransit, MCP over HTTP/SSE.
-- `docs/architecture/` (bounded-contexts, data-model, mcp-tools, ai-orchestration, communication-patterns) and `docs/decisions/` ADRs (001–007) are the contract for future implementation. Keep them in sync when you change related concepts.
+- `docs/architecture/` (bounded-contexts, data-model, mcp-tools, ai-orchestration, communication-patterns) and `docs/decisions/` ADRs are the contract for future implementation. Keep them in sync when you change related concepts.
