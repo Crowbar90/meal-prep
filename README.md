@@ -13,7 +13,7 @@ An AI-assisted weekly meal planning application with a deterministic C# backend 
 
 ```
 mealprep/
-├── agents/              # OpenClaw agent definitions, prompts, and workflows
+├── openclaw/             # OpenClaw agent definitions, prompts, and workflows
 ├── docs/                # Architecture documentation and ADRs
 ├── infrastructure/      # Docker, Kubernetes (Kustomize), Nix
 ├── src/                 # C# backend (Clean Architecture)
