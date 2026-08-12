@@ -2,19 +2,21 @@
 
 ## Repo state (important)
 
-Design-phase repo — **no app code beyond the domain model**. What exists:
+Design-phase repo — **no app code beyond the domain model and the Aspire scaffold**. What exists:
 
 - `openclaw/` — OpenClaw runtime configuration package (agent manifests, prompts, workflow YAMLs); consumed externally
 - `src/MealPrepPlanner.Domain/` — pure C# domain project (`MealPrepPlanner.Domain.csproj`); aggregates, value objects, domain events, and deterministic services only, zero external dependencies
-- `tests/MealPrepPlanner.Tests/` — unified xUnit v3 suite (single suite for unit + future integration tests); `Unit/` now, `Integration/` later, same project
-- `src/MealPrepPlanner.slnx` — solution file (XML `.slnx`); references the domain and test projects
+- `src/MealPrepPlanner.ServiceDefaults/` — Aspire shared-defaults class library (`IsAspireSharedProject=true`); holds `AddServiceDefaults()` / `MapDefaultEndpoints()` extension methods. Used by future service projects (Api, Infrastructure); not consumed by the AppHost itself.
+- `src/MealPrepPlanner.AppHost/` — Aspire AppHost (uses `Aspire.AppHost.Sdk` 13.4.6); local-development orchestrator. Boots an empty graph today; will gain `AddProject` / `AddContainer` calls once runnable services land.
+- `tests/MealPrepPlanner.Tests/` — unified xUnit v3 suite (single suite for unit + future integration tests); `Unit/` now, `Integration/` later, same project. Aspire-based end-to-end tests are **not** in this project — deferred to a future `tests/MealPrepPlanner.Aspire.Tests/` until at least one runnable service exists to exercise.
+- `src/MealPrepPlanner.slnx` — solution file (XML `.slnx`); references all projects above
 - `src/Directory.Build.props` — C# build config; pins `net10.0` / C# 14 / warnings-as-errors for all projects under `src/` (tests import it via `tests/Directory.Build.props`)
 - `.github/workflows/pr-build-test.yml` — PR + main pipeline: restore, format check, build, test. Single job `build-and-test`; greppable from the GitHub branch-protection UI
 - `docs/architecture/` and `docs/decisions/` — design docs and ADRs for planned behavior
 - `.opencode/` — opencode development agents (subagents + `coder` primary)
 - `.editorconfig` — formatting rules (injected into every opencode session via `opencode.json`)
 - `.gitignore` — ignores .NET build output (`bin/`, `obj/`), IDE/OS files
-- `README.md` — describes the *aspirational* full stack; `infrastructure/`, web/app projects, and a separate `Integration/` test project are planned but do not exist. Its quick-start commands (`nix develop`, `docker compose`, `dotnet ef`, `dotnet run`) cannot run yet.
+- `README.md` — describes the *aspirational* full stack; `infrastructure/`, web/app projects, and a separate `Integration/` test project are planned but do not exist. Its quick-start commands (`nix develop`, `dotnet ef`, `dotnet run` from `src/Api`) cannot run yet. The Aspire AppHost step **does** work today and opens an empty dashboard; on NixOS it additionally needs `programs.nix-ld.enable = true` (see the Local dev note below).
 
 > **Test coverage in CI is intentionally deferred.** The test project pins `xunit.v3` 3.2.2 which bundles Microsoft Testing Platform v1 (`xunit.v3.mtp-v1`); the supported coverage extensions (`Microsoft.Testing.Extensions.CodeCoverage` 18.x, `coverlet.MTP`) require MTP v2 / .NET 10 only, and adopt xunit.v3 `xunit.v3.mtp-v2`. Adding coverage therefore means a framework bump (prerelease at time of writing). Tracked separately; revisit when xunit.v3 ships an MTP v2-compatible stable or when `Integration/` tests land and force the question.
 
@@ -25,7 +27,16 @@ dotnet build src/MealPrepPlanner.slnx
 dotnet test  src/MealPrepPlanner.slnx
 ```
 
-The test project is an MTP executable (`xunit.v3`); it needs `DOTNET_ROOT` exported on this NixOS machine or the native apphost cannot find the runtime. There is no lint/typecheck command beyond `dotnet format` (reliable for whitespace, but it silently skips the two .editorconfig IDE style rules — verify those manually when editing).
+Local dev (Aspire AppHost):
+
+```sh
+dotnet run --project src/MealPrepPlanner.AppHost
+```
+
+> The AppHost prints the dashboard URL on stdout. Today the graph is empty —
+> no resources are registered yet.
+
+The test project is an MTP executable (`xunit.v3`) and the AppHost is a native .NET apphost (`Aspire.AppHost.Sdk`); both need `DOTNET_ROOT` exported on this NixOS machine or the native apphost cannot find the runtime. **Aspire on NixOS additionally needs `programs.nix-ld.enable = true`** so the `dcp` orchestrator and dashboard binaries can dynamically link against `glibc` — see `https://nix.dev/permalink/stub-ld`. CI runs on `ubuntu-latest` and is not affected. There is no lint/typecheck command beyond `dotnet format` (reliable for whitespace, but it silently skips the two .editorconfig IDE style rules — verify those manually when editing).
 
 ## Documentation is the source of truth
 
