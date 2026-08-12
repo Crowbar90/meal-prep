@@ -1,23 +1,33 @@
-# OpenClaw Agents
+# OpenClaw Configuration Package
 
-This directory contains all agent definitions, prompts, and workflow configurations for OpenClaw.
+This directory is the OpenClaw configuration package: agent definitions, prompts, and workflow configurations for the runtime deployed by OpenClaw.
 
-> **Important:** OpenClaw itself is deployed **externally** (on a separate Kubernetes namespace or host). This directory is a configuration package that OpenClaw consumes via Git submodule, ConfigMap, or volume mount.
+> **Important:** OpenClaw itself is deployed **externally** (on a separate Kubernetes namespace or host). This directory is a configuration package that OpenClaw consumes via Git submodule, ConfigMap, or volume mount. It is separate from the opencode development agents in `.opencode/`.
 
 ## Directory Layout
 
 ```
-agents/
+openclaw/
 ├── workflows/              # OpenClaw workflow definitions (YAML)
-├── _shared/                # Shared prompts, tool configs, utilities
-└── <agent-name>/           # One directory per agent
-    ├── agent.yaml          # Agent manifest (model, role, skills)
-    └── prompts/            # Agent-specific prompt files
+└── agents/
+    ├── _shared/            # Shared prompts, tool configs, utilities
+    └── <agent-name>/       # One directory per agent
+        ├── agent.yaml      # Agent manifest (model, role, skills)
+        └── prompts/        # Agent-specific prompt files
 ```
+
+## Core Invariants
+
+- **Agents never do math or touch the DB.** All calculations, validation, and persistence go through MCP tools (e.g. `calculate_nutrition`, `validate_constraints`, `save_meal_plan_draft`). Prompts must enforce this.
+- Agents must emit **structured JSON with a `reasoning` field**; include output schemas and few-shot examples in prompts.
+- Agent names in a workflow's `agents:` map use snake_case aliases (`meal_planner`, not `meal-planner`).
+- All agent prompt files should build on the shared base at `openclaw/agents/_shared/prompts/system-base.txt`.
+- The MCP tool catalog lives in `docs/architecture/mcp-tools.md` — keep tool names referenced in `agent.yaml` `skills:`, `workflows/*.yaml`, and prompt files in sync with it.
+- Workflow steps reference other steps via `{{steps.<id>.output}}`; conditionals use `{{steps.<id>.output.approved == false}}` style templates.
 
 ## Adding a New Agent
 
-1. Create a directory: `agents/<agent-name>/`
+1. Create a directory: `openclaw/agents/<agent-name>/`
 2. Write `agent.yaml` following the schema below
 3. Add prompt files in `prompts/`
 4. Register the agent in the relevant workflow under `workflows/`

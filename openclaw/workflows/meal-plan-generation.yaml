@@ -13,7 +13,7 @@ agents:
     role: "Meal Planner"
     model: "gpt-4.1"
     prompts:
-      system: "../meal-planner/prompts/system.txt"
+      system: "../agents/meal-planner/prompts/system.txt"
     temperature: 0.7
     max_tokens: 4000
     skills:
@@ -33,7 +33,7 @@ agents:
     role: "Nutrition Reviewer"
     model: "gpt-4.1"
     prompts:
-      system: "../nutrition-reviewer/prompts/system.txt"
+      system: "../agents/nutrition-reviewer/prompts/system.txt"
     temperature: 0.2
     max_tokens: 2000
     skills:
@@ -50,7 +50,7 @@ agents:
     role: "Recipe Generator"
     model: "gpt-4.1"
     prompts:
-      system: "../recipe-generator/prompts/system.txt"
+      system: "../agents/recipe-generator/prompts/system.txt"
     temperature: 0.8
     max_tokens: 4000
     skills:
@@ -66,7 +66,7 @@ agents:
     role: "Shopping Optimizer"
     model: "gpt-4.1"
     prompts:
-      system: "../shopping-optimizer/prompts/system.txt"
+      system: "../agents/shopping-optimizer/prompts/system.txt"
     temperature: 0.3
     max_tokens: 2000
     skills:
@@ -81,7 +81,7 @@ agents:
     role: "Meal Prep Optimizer"
     model: "gpt-4.1"
     prompts:
-      system: "../meal-prep-optimizer/prompts/system.txt"
+      system: "../agents/meal-prep-optimizer/prompts/system.txt"
     temperature: 0.4
     max_tokens: 3000
     skills:
