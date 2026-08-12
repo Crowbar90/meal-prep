@@ -18,12 +18,12 @@ We need two things before that stack exists:
 Adopt **.NET Aspire 13.4.x** as the local-development and end-to-end-test orchestration layer. The scaffolding lives in two projects under `src/`:
 
 - `src/MealPrepPlanner.ServiceDefaults/` — class library (`IsAspireSharedProject=true`) holding the canonical `AddServiceDefaults()` / `MapDefaultEndpoints()` extension methods. Future service projects (e.g. `MealPrepPlanner.Api`) reference this and call `AddServiceDefaults()` from their `Program.cs`. Pinned package versions: `Microsoft.Extensions.Http.Resilience` 10.9.0, `Microsoft.Extensions.ServiceDiscovery` 10.9.0, OpenTelemetry instrumentation 1.17.0, runtime instrumentation 1.12.0.
-- `src/MealPrepPlanner.AppHost/` — Aspire AppHost (`Aspire.AppHost.Sdk` 13.4.6, `Aspire.Hosting.AppHost` 13.4.6). Today it builds and runs an empty orchestration graph (`builder.Build().Run()`); no resources registered. Future runnable services will be added with `builder.AddProject<Projects.X>("x")` and wired together with the `WithReference()` chain.
+- `src/MealPrepPlanner.AppHost/` — Aspire AppHost (`Aspire.AppHost.Sdk` 13.4.6, `Aspire.Hosting.AppHost` 13.4.6, `Aspire.Hosting.PostgreSQL` 13.4.6). Builds and runs an orchestration graph that brings up a Postgres 18 container (`postgres` resource → `mealprep` database). No runnable services registered yet; once `MealPrepPlanner.Api` lands it will be added with `builder.AddProject<Projects.MealPrepPlanner_Api>("api").WithReference(mealprepDb)` to consume the database.
 
-The AppHost **does not** reference the Domain or ServiceDefaults projects today. Once a service project lands (API, Infrastructure), the AppHost adds a `<ProjectReference>` and the SDK auto-generates a strongly-typed `Projects.<Name>` type for the orchestrator to consume.
+The AppHost **does not** reference the Domain, ServiceDefaults, or Dal projects today. Once a service project lands (API, Infrastructure), the AppHost adds a `<ProjectReference>` and the SDK auto-generates a strongly-typed `Projects.<Name>` type for the orchestrator to consume.
 
 This ADR does **not** commit to:
-- Wiring PostgreSQL 16 or Redis into the AppHost — that belongs to a future ADR when the persistence stack lands.
+- Wiring Redis into the AppHost — that belongs to a future ADR when the caching layer lands.
 - Writing Aspire-based end-to-end tests — those live in a future `tests/MealPrepPlanner.Aspire.Tests/` project; deferred until at least one runnable service exists to test against.
 - Replacing the planned Kubernetes / Kustomize / GitOps deployment. Aspire is local-dev only; production stays on K8s.
 
