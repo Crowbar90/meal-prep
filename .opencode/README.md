@@ -10,7 +10,7 @@ Development agents for opencode — distinct from the **OpenClaw runtime agents*
 
 ## `coder` (primary, default)
 
-Standard coding agent. Full tool access. Front-loads repo invariants (read AGENTS.md + docs/ first, ADRs final → ask on conflict) and delegates specialized work to the subagents below whenever possible. Runs on `opencode-go/kimi-k2.7-code`.
+Standard coding agent. Full tool access. Front-loads repo invariants (read AGENTS.md + docs/ first, ADRs final → ask on conflict) and delegates specialized work to the subagents below whenever possible. Runs on `opencode-go/minimax-m3`.
 
 ## Subagents (`agents/`)
 
