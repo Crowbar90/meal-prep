@@ -1,7 +1,7 @@
 ---
 description: Read-only code reviewer. Reviews changes against docs/ invariants, ADRs, and engineering best practices. Never edits.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode-go/deepseek-v4-flash
 temperature: 0.1
 permission:
   edit: deny

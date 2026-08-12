@@ -1,7 +1,7 @@
 ---
 description: Drafts commit messages and PR descriptions from git diff/log. Never edits code or runs git mutations.
 mode: subagent
-model: opencode/big-pickle
+model: opencode-go/mimo-v2.5
 temperature: 0.2
 permission:
   edit: deny

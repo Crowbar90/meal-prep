@@ -1,7 +1,7 @@
 ---
 description: Maintains agent prompt/config files (openclaw/, .opencode/) and keeps the MCP tool catalog in sync with them.
 mode: subagent
-model: opencode/big-pickle
+model: opencode-go/mimo-v2.5
 temperature: 0.2
 permission:
   edit:

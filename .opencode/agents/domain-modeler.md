@@ -1,7 +1,7 @@
 ---
 description: Scaffolds new DDD aggregates (entities, value objects, domain events) plus their tests, following docs/architecture/data-model.md and existing aggregates.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode-go/deepseek-v4-flash
 temperature: 0.2
 permission:
   bash:

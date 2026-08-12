@@ -1,7 +1,7 @@
 ---
 description: Writes and amends project documentation (docs/, README.md, AGENTS.md). Proposes changes and applies them only after user approval. Never touches code.
 mode: subagent
-model: opencode/big-pickle
+model: opencode-go/mimo-v2.5
 temperature: 0.3
 permission:
   edit:

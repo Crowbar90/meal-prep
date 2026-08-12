@@ -1,7 +1,7 @@
 ---
 description: Writes and extends xUnit v3 tests in tests/MealPrepPlanner.Tests mirroring existing patterns, then runs dotnet test to verify them.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode-go/deepseek-v4-flash
 temperature: 0.2
 permission:
   bash:

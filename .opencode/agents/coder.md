@@ -1,7 +1,7 @@
 ---
 description: Default primary agent for development. Plans, integrates, and coordinates; delegates specialized work (DDD scaffolding, tests, docs, review, git) to subagents whenever possible.
 mode: primary
-model: opencode/deepseek-v4-flash-free
+model: opencode-go/kimi-k2.7-code
 temperature: 0.2
 permission:
   task:

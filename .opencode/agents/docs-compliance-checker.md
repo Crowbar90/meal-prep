@@ -1,7 +1,7 @@
 ---
 description: Verifies an implementation or change against docs/ (architecture + decisions). Read-only; reports drift and contradictions.
 mode: subagent
-model: opencode/big-pickle
+model: opencode-go/mimo-v2.5
 temperature: 0.1
 permission:
   edit: deny
