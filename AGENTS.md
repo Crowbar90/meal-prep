@@ -2,18 +2,21 @@
 
 ## Repo state (important)
 
-Design-phase repo — **no app code beyond the domain model, and no CI yet**. What exists:
+Design-phase repo — **no app code beyond the domain model**. What exists:
 
 - `openclaw/` — OpenClaw runtime configuration package (agent manifests, prompts, workflow YAMLs); consumed externally
 - `src/MealPrepPlanner.Domain/` — pure C# domain project (`MealPrepPlanner.Domain.csproj`); aggregates, value objects, domain events, and deterministic services only, zero external dependencies
 - `tests/MealPrepPlanner.Tests/` — unified xUnit v3 suite (single suite for unit + future integration tests); `Unit/` now, `Integration/` later, same project
 - `src/MealPrepPlanner.slnx` — solution file (XML `.slnx`); references the domain and test projects
 - `src/Directory.Build.props` — C# build config; pins `net10.0` / C# 14 / warnings-as-errors for all projects under `src/` (tests import it via `tests/Directory.Build.props`)
+- `.github/workflows/pr-build-test.yml` — PR + main pipeline: restore, format check, build, test. Single job `build-and-test`; greppable from the GitHub branch-protection UI
 - `docs/architecture/` and `docs/decisions/` — design docs and ADRs for planned behavior
 - `.opencode/` — opencode development agents (subagents + `coder` primary)
 - `.editorconfig` — formatting rules (injected into every opencode session via `opencode.json`)
 - `.gitignore` — ignores .NET build output (`bin/`, `obj/`), IDE/OS files
-- `README.md` — describes the *aspirational* full stack; `infrastructure/`, `.github/`, and web/app projects are planned but do not exist. Its quick-start commands (`nix develop`, `docker compose`, `dotnet ef`, `dotnet run`) cannot run yet.
+- `README.md` — describes the *aspirational* full stack; `infrastructure/`, web/app projects, and a separate `Integration/` test project are planned but do not exist. Its quick-start commands (`nix develop`, `docker compose`, `dotnet ef`, `dotnet run`) cannot run yet.
+
+> **Test coverage in CI is intentionally deferred.** The test project pins `xunit.v3` 3.2.2 which bundles Microsoft Testing Platform v1 (`xunit.v3.mtp-v1`); the supported coverage extensions (`Microsoft.Testing.Extensions.CodeCoverage` 18.x, `coverlet.MTP`) require MTP v2 / .NET 10 only, and adopt xunit.v3 `xunit.v3.mtp-v2`. Adding coverage therefore means a framework bump (prerelease at time of writing). Tracked separately; revisit when xunit.v3 ships an MTP v2-compatible stable or when `Integration/` tests land and force the question.
 
 Build and test:
 
