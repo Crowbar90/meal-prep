@@ -5,6 +5,8 @@ model: opencode-go/minimax-m3
 temperature: 0.2
 permission:
   task:
+    "git *": "deny"
+    "gh * ": "deny"
     "*": "allow"
 ---
 
