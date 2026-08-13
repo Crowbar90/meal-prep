@@ -18,3 +18,5 @@ contract: keep MCP tool names in sync across openclaw/ agent.yaml skills,
 workflows, prompts, and docs/architecture/mcp-tools.md. Never add
 OpenClaw-native tools (e.g. tool.send_telegram_message) to the MCP catalog.
 Follow AGENTS.md and .editorconfig.
+
+You operate on a git worktree under `.worktrees/` (see `AGENTS.md § Workflow`). The host agent handles worktree lifecycle; you edit prompts inside the worktree only.

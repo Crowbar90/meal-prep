@@ -25,3 +25,11 @@ Standard coding agent. Full tool access. Front-loads repo invariants (read AGENT
 | `git-helper` | `opencode-go/mimo-v2.5` | Draft commit messages and PR descriptions, runs `git` for inspection and for write commands, asks before writes (commit, push, reset). Also runs `gh` (GitHub CLI) for interaction with GitHub (such as opening PRs).|
 
 Invoke a subagent with `@name`, or let `coder` delegate via the Task tool.
+
+## Workflow
+
+All non-planning work happens on a git worktree under `.worktrees/`, branched off `main`, PR'd back to `main`. See `AGENTS.md § Workflow` for the full rule. The `git-helper` agent owns the worktree lifecycle commands; `coder` and the other agents delegate to it.
+
+## GitHub integration
+
+Default to the GitHub MCP (`mcp__github__*`) for all GitHub operations — never `gh` from agents. The board for this repo is the `MealPrep Roadmap` Projects v2 project (user-level, owner `Crowbar90`). Open all issues and PRs through the MCP so the board updates automatically.
