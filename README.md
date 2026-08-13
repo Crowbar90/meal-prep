@@ -75,6 +75,7 @@ Telegram Bot → OpenClaw Workflow → AI Agents → MCP Tools → Backend API
 
 See `docs/architecture/` for detailed design documentation.
 See `docs/decisions/` for Architecture Decision Records (ADRs).
+See `docs/project-board.md` for the [`MealPrep Roadmap`](https://github.com/users/Crowbar90/projects/2) workflow and label conventions.
 
 ## License
 
