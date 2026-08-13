@@ -1,0 +1,29 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.6">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <!--
+    Keep the Aspire.AppHost.Sdk version (in the Sdk attribute above) and the
+    Aspire.Hosting.AppHost package version in lockstep. They ship together
+    and must move together.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.4.6" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.4.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      No ProjectReferences today. The AppHost orchestrates a Postgres 18
+      container only; once a runnable service project lands (e.g.
+      MealPrepPlanner.Api, which will consume MealPrepPlanner.Dal), reference
+      it here so the Aspire SDK generates a strongly-typed Projects.<Name>
+      reference and the AppHost can call
+      builder.AddProject<Projects.MealPrepPlanner_Api>(...).WithReference(...).
+    -->
+  </ItemGroup>
+
+</Project>

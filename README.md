@@ -23,21 +23,25 @@ mealprep/
 
 ## Quick Start (Local Development)
 
+> **Design phase.** The domain model, the Aspire AppHost, and the persistence
+> layer (`MealPrepPlanner.Dal`) exist today. Step 2 boots the dashboard and a
+> Postgres 18 container; steps 3 and 4 activate once the API project lands.
+
 ```bash
 # 1. Enter Nix shell (dependencies)
 nix develop
 
-# 2. Start infrastructure
-docker compose -f infrastructure/docker/docker-compose.yml up -d
+# 2. Run the Aspire AppHost (opens the local dashboard + Postgres 18 container)
+dotnet run --project src/MealPrepPlanner.AppHost
 
-# 3. Run migrations
-cd src && dotnet ef database update --project Infrastructure --startup-project Api
+# 3. (Future) Run migrations
+cd src && dotnet ef database update --project MealPrepPlanner.Dal --startup-project MealPrepPlanner.Dal
 
-# 4. Run backend
+# 4. (Future) Run the API
 cd src/Api && dotnet run
 
 # 5. Run tests
-cd src && dotnet test
+dotnet test src/MealPrepPlanner.slnx
 ```
 
 ## Technology Stack
@@ -45,7 +49,8 @@ cd src && dotnet test
 | Layer | Technology |
 |-------|-----------|
 | Backend | C# 14, ASP.NET Core 10 |
-| Database | PostgreSQL 16 |
+| Local orchestration | .NET Aspire 13 (AppHost + ServiceDefaults) |
+| Database | PostgreSQL 18 |
 | Messaging | MassTransit (in-memory → RabbitMQ later) |
 | Cache | Redis |
 | AI Orchestration | OpenClaw (external, deployed separately) |
