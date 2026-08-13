@@ -31,11 +31,31 @@ Worktrees keep the working tree on `main` clean and isolate in-progress work. Th
 - Documentation-only edits that are unambiguously safe and pre-approved by the user can be done on `main`. Default to the worktree rule unless the user says otherwise.
 - Hotfixes on a deployed branch (none today) follow the same worktree rule against the affected branch.
 
+### GitHub CLI exception
+
+The `gh` CLI is generally **forbidden** for agents — the GitHub MCP (`mcp__github__*`) is the default. There is exactly one allowed exception, scoped tightly:
+
+- `gh api repos/{owner}/{repo}/milestones*` — listing, creating, updating, and deleting milestones. The GitHub MCP does not expose `create_milestone` / `update_milestone`; until it does, milestone administration is the one job that has to use `gh api` directly.
+- This exception is owned by the `git-helper` agent. It is **not** a blanket `gh` permission. No other agent (including `coder`) should run `gh` commands.
+
+Anything else — opening PRs, listing issues, comments, labels, project board, etc. — must go through the MCP.
+
+### On-session-startup worktree sweep
+
+To avoid the "user has to tell the agent the PR was merged" round-trip, every new agent session runs a small sweep *before* doing any other work:
+
+1. `git fetch origin`
+2. `git worktree list` — enumerate local worktrees
+3. For each worktree whose branch has been deleted on origin (e.g. after PR merge via the GitHub UI's "Delete branch" button), remove the worktree (`git worktree remove <path>`) and the local branch (`git branch -d <branch>`).
+4. If a PR's remote branch is still alive but the PR was merged, the remote branch gets auto-deleted by GitHub on merge → step 3 catches it on the next sweep.
+
+This sweep runs once per session, costs one `git fetch`, and removes the merge-to-cleanup latency.
+
 ### Where the rule is enforced
 
 - This file (`AGENTS.md § Workflow`) is the single source of truth.
 - Agent prompts in `.opencode/agents/` reference this section with a one-liner rather than restating the rule.
-- The `git-helper` agent owns the worktree lifecycle commands. The `coder` agent does not run `git` directly; it delegates worktree add/remove to `git-helper`.
+- The `git-helper` agent owns the worktree lifecycle commands, the `gh api /milestones` exception, and the on-session-startup sweep. The `coder` agent does not run `git` or `gh` directly; it delegates everything related to these rules to `git-helper`.
 
 ---
 

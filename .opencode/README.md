@@ -10,7 +10,7 @@ Development agents for opencode — distinct from the **OpenClaw runtime agents*
 
 ## `coder` (primary, default)
 
-Standard coding agent. Full tool access. Front-loads repo invariants (read AGENTS.md + docs/ first, ADRs final → ask on conflict) and delegates specialized work to the subagents below whenever possible. Runs on `opencode-go/minimax-m3`. Does not run `git` or `gh` commands (delegates them to `git-helper`).
+Standard coding agent. Full tool access. Front-loads repo invariants (read AGENTS.md + docs/ first, ADRs final → ask on conflict) and delegates specialized work to the subagents below whenever possible. Runs on `opencode-go/minimax-m3`. Delegates worktree lifecycle and milestone administration to `git-helper`; all GitHub operations default to the GitHub MCP.
 
 ## Subagents (`agents/`)
 
@@ -22,7 +22,7 @@ Standard coding agent. Full tool access. Front-loads repo invariants (read AGENT
 | `docs-compliance-checker` | `opencode-go/mimo-v2.5` | Verify an implementation matches `docs/` (architecture + decisions); report drift |
 | `docs-writer` | `opencode-go/mimo-v2.5` | Create or amend `docs/`, `README.md`, `AGENTS.md` (propose-then-apply) |
 | `prompt-maintainer` | `opencode-go/mimo-v2.5` | Keep agent prompts and the MCP tool catalog (`docs/architecture/mcp-tools.md`) in sync |
-| `git-helper` | `opencode-go/mimo-v2.5` | Draft commit messages and PR descriptions, runs `git` for inspection and for write commands, asks before writes (commit, push, reset). Also runs `gh` (GitHub CLI) for interaction with GitHub (such as opening PRs).|
+| `git-helper` | `opencode-go/mimo-v2.5` | Owns local git operations, the worktree lifecycle (incl. the on-session-startup sweep), commit messages, PR descriptions, and the one narrow `gh api /milestones` exception. |
 
 Invoke a subagent with `@name`, or let `coder` delegate via the Task tool.
 
@@ -32,4 +32,4 @@ All non-planning work happens on a git worktree under `.worktrees/`, branched of
 
 ## GitHub integration
 
-Default to the GitHub MCP (`mcp__github__*`) for all GitHub operations — never `gh` from agents. The board for this repo is the `MealPrep Roadmap` Projects v2 project (user-level, owner `Crowbar90`). Open all issues and PRs through the MCP so the board updates automatically.
+Default to the GitHub MCP (`mcp__github__*`) for all GitHub operations. The one narrow exception is `gh api repos/*/*/milestones*` for milestone administration, owned by `git-helper`. The board for this repo is the `MealPrep Roadmap` Projects v2 project (user-level, owner `Crowbar90`). Open all issues and PRs through the MCP so the board updates automatically.
