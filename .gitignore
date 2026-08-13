@@ -63,3 +63,6 @@ Thumbs.db
 venv/
 .venv/
 node_modules/
+
+# Worktrees (see AGENTS.md § Workflow)
+.worktrees/

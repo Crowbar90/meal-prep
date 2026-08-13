@@ -1,5 +1,44 @@
 # AGENTS.md
 
+## Workflow
+
+**Every non-planning task runs on a git worktree.** No agent (human or AI) commits directly to `main`.
+
+### Why
+
+Worktrees keep the working tree on `main` clean and isolate in-progress work. They also make reviews trivial: each PR maps to one branch, one worktree, and one lifecycle.
+
+### Process
+
+1. **Branch from `main`.** Each issue gets its own branch.
+   - Branch name: `feat/<issue>-<slug>` (e.g. `feat/5-aspire-migrate`).
+   - Issue number first, so the project board can link branch ⇄ issue with no mapping table.
+2. **Worktree path:** `.worktrees/<slug>/` inside the repo (e.g. `.worktrees/aspire-migrate/`).
+   - The directory is per-repo and ignored by Git (see `.gitignore`).
+   - Create the worktree with `git worktree add .worktrees/<slug> -b feat/<issue>-<slug> main`.
+3. **Do the work in the worktree.** All commits, builds, and tests happen there.
+4. **Open a PR against `main`.** One PR per branch. Use the GitHub MCP (`create_pull_request`) — never `gh` from agents.
+5. **After merge, clean up:**
+   - `git worktree remove .worktrees/<slug>`
+   - `git branch -d feat/<issue>-<slug>` (locally)
+   - `git push origin --delete feat/<issue>-<slug>`
+6. **Planes of work:**
+   - `plan` mode (read-only): skip the worktree rule. Planning happens on `main` so the user sees a single coherent state.
+   - All other modes: worktree required.
+
+### Exceptions
+
+- Documentation-only edits that are unambiguously safe and pre-approved by the user can be done on `main`. Default to the worktree rule unless the user says otherwise.
+- Hotfixes on a deployed branch (none today) follow the same worktree rule against the affected branch.
+
+### Where the rule is enforced
+
+- This file (`AGENTS.md § Workflow`) is the single source of truth.
+- Agent prompts in `.opencode/agents/` reference this section with a one-liner rather than restating the rule.
+- The `git-helper` agent owns the worktree lifecycle commands. The `coder` agent does not run `git` directly; it delegates worktree add/remove to `git-helper`.
+
+---
+
 ## Repo state (important)
 
 Design-phase repo — **no app code beyond the domain model and the Aspire scaffold**. What exists:

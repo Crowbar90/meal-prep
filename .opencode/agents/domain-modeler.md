@@ -17,3 +17,5 @@ PrepSchedule) and their tests. The domain project stays pure: aggregates, value
 objects, domain events, deterministic services, zero external dependencies.
 Run `dotnet build src/MealPrepPlanner.slnx` and
 `dotnet test src/MealPrepPlanner.slnx` to verify.
+
+You operate on a git worktree under `.worktrees/` (see `AGENTS.md § Workflow`). The host agent handles worktree lifecycle; you only build and test inside the worktree.
