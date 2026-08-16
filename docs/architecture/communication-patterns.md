@@ -71,6 +71,7 @@ public class NutritionTools
 Use MassTransit for **backend-internal** domain events:
 
 - `MealPlanFinalized` → Shopping context generates list
+- `MealPlanFinalized` → Meal Prep context generates a draft prep schedule
 - `PantryItemExpired` → Notification context alerts user
 - `RecipeCreated` → Search index updated
 
@@ -130,6 +131,13 @@ GET    /api/households/{id}/preferences          # Get preferences
 PUT    /api/households/{id}/preferences          # Update preferences
 GET    /api/recipes                              # Search recipes
 GET    /api/recipes/{id}                         # Get recipe
+# Added 2026-08-16 as part of the cooking-optimization slice (#29).
+# Pantry + shopping endpoints are deferred.
+GET    /api/households/{id}/prep-schedules                        # List prep schedules
+POST   /api/households/{id}/prep-schedules                        # Create prep schedule
+GET    /api/households/{id}/prep-schedules/{scheduleId}           # Get prep schedule
+PUT    /api/households/{id}/prep-schedules/{scheduleId}           # Update prep schedule
+DELETE /api/households/{id}/prep-schedules/{scheduleId}           # Delete prep schedule
 ```
 
 ### Response Format

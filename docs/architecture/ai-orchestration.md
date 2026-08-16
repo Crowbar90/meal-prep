@@ -34,7 +34,14 @@ Telegram /generate
 └──────────────┘
        │
        ▼
-   [... more agents ...]
+┌──────────────┐     ┌──────────────┐
+│   Agent C    │────►│  MCP Tools   │────► Backend API
+│ (Meal Prep   │     │              │
+│  Optimizer)  │     └──────────────┘
+└──────────────┘
+       │
+       ▼ (output: validated PrepSchedule)
+   [... Meal Prep Optimizer outputs validated PrepSchedule; then notify_user]
        │
        ▼
 ┌──────────────┐
@@ -123,7 +130,25 @@ Result shows the full causal chain:
 2. Pantry had lentils expiring in 2 days
 3. MealPlanner proposed lentil curry
 4. NutritionEngine validated it
-5. ShoppingOptimizer confirmed no purchase needed
+5. Meal Prep Optimizer proposed a Sun 4pm prep batch; PrepFeasibilityValidator confirmed it (no violations).
+6. ShoppingOptimizer confirmed no purchase needed
+
+## Meal Prep Optimizer (2026-08-16)
+
+The Meal Prep Optimizer is the third agent in the workflow, invoked after the Nutrition Reviewer.
+
+Its job:
+1. Receive a finalized meal plan.
+2. Propose a `PrepSchedule` draft (equipment assignments, time windows, batching).
+3. Call the deterministic `validate_prep_schedule` MCP tool.
+4. If violations are found, refine the draft and re-validate — up to N=3 times (configurable via workflow YAML).
+5. Output the validated `PrepSchedule` for the next agent.
+
+**Determinism boundary:** The agent is creative-only; the `PrepFeasibilityValidator` is a pure C# domain service. See ADR 003 — agent creativity is bounded by backend evaluation.
+
+**Audit:** The `feasibility_violations` JSONB column on `prep_schedules` captures the last validator result for audit (per `docs/architecture/data-model.md`).
+
+**Decision tracing:** A `decision_event` row is written for every `propose_prep_schedule` call (decision_type=`PROPOSED`) and every `validate_prep_schedule` call (decision_type=`VALIDATED`), just like the existing meal_planner / recipe_generator rows.
 
 ## Retry and Failure Handling
 

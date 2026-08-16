@@ -31,6 +31,8 @@ In addition to GitHub's defaults (`bug`, `enhancement`, `documentation`, etc.), 
 | `slice:dal` | Slice 2 follow-on — DAL hardening (Aspire migration runner + integration test) |
 | `slice:webapi` | Slice 3 — MealPrepPlanner.Api (ASP.NET Core 10 REST API) |
 | `slice:mcp` | Slice 4 — MealPrepPlanner.Mcp (MCP server for AI agents) |
+| `slice:prep` | Cooking-optimization slice — Meal Prep bounded context (issues #26–#34) |
+| `backlog` | Deferred items — Pantry + Shopping/cost, not in the active iteration |
 
 Every issue carries exactly one `slice:*` label so the board view can filter by slice.
 
@@ -45,8 +47,24 @@ Every issue carries exactly one `slice:*` label so the board view can filter by 
 | `component:docs` | `docs/`, `README.md`, `AGENTS.md` updates |
 | `component:tests` | xUnit v3 tests |
 | `component:auth` | Authentication / authorization / API keys |
+| `component:domain` | DDD aggregates, value objects, domain events, deterministic services |
+| `component:openclaw` | OpenClaw agent manifests, prompts, workflow YAMLs |
 
 An issue can carry one or more `component:*` labels.
+
+## Iteration
+
+A single-select `Iteration` field was added to the project on 2026-08-16. It tracks which time-boxed slice a given issue belongs to.
+
+| Iteration | Start Date | Duration | Status |
+| --- | --- | --- | --- |
+| `Cooking optimization (next)` | 2026-08-17 | 14 days | Active — Meal Prep bounded context (issues #26–#34) |
+| `Backlog — Pantry + Shopping/cost` | 2026-08-31 | 14 days | Deferred — not yet started |
+
+**Convention:**
+- Issues in the active slice get `Cooking optimization (next)`.
+- Pantry and Shopping/cost issues (deferred) get `Backlog — Pantry + Shopping/cost`.
+- New issues with no iteration assignment are triaged into one of the two, or a new iteration is created if the scope shifts again.
 
 ## Workflow
 
@@ -55,6 +73,6 @@ An issue can carry one or more `component:*` labels.
 3. **Review.** The PR auto-links; leave Status as `In Progress` until it merges.
 4. **Done.** Once the PR merges, the worktree + branch are cleaned up (see `AGENTS.md § Workflow`). Status flips to `Done` manually.
 
-## Why no custom fields
+## Why so few custom fields
 
-The `coder` and `docs-writer` agents don't have a generic "create single-select field" verb available in the GitHub MCP; iteration fields are the only new-field option. Until we hit a reason that the default Status + Labels combo isn't enough (e.g. story-point estimation across many contributors), we keep the board lean and use GitHub's defaults.
+The `coder` and `docs-writer` agents don't have a generic "create single-select field" verb available in the GitHub MCP; iteration fields are the only new-field option. We adopted an `Iteration` field on 2026-08-16 to track time-boxed slices (Cooking optimization vs. deferred Pantry + Shopping/cost). Beyond that, the default `Status` + Labels combo remains sufficient — we keep the board lean and avoid custom fields that can't be programmatically managed.

@@ -421,6 +421,100 @@ Retrieve consolidated user preferences for a household.
 
 ---
 
+## Prep Tools
+
+These tools were added on 2026-08-16 as part of the cooking-optimization slice (#28). They follow ADR 003's split: `propose_*` is the agent's responsibility, `validate_*` is the backend's.
+
+### `propose_prep_schedule`
+
+Create a draft prep schedule from a finalized meal plan. Returns a contract-only stub; the actual draft is filled in by the Meal Prep Optimizer agent.
+
+**Input:**
+```json
+{
+  "meal_plan_id": "uuid",
+  "preferences_id": "uuid"
+}
+```
+
+**Output:**
+```json
+{
+  "meal_plan": { /* summarized MealPlan snapshot */ },
+  "prep_schedule": {
+    "status": "draft",
+    "tasks": []
+  }
+}
+```
+
+**Backend Logic:** This tool returns a JSON-Schema contract; the actual draft is filled in by the Meal Prep Optimizer agent.
+
+---
+
+### `validate_prep_schedule`
+
+Determine whether a proposed prep schedule is feasible — equipment conflicts, time overlaps, food safety constraints.
+
+**Input:**
+```json
+{
+  "draft": { /* PrepSchedule object with Tasks */ },
+  "preferences_id": "uuid"
+}
+```
+
+**Output:**
+```json
+{
+  "valid": false,
+  "violations": [
+    {
+      "kind": "equipment_conflict",
+      "message": "Oven required for two tasks at overlapping times",
+      "taskId": "uuid",
+      "suggestion": "Move 'Bake Lasagna' to Saturday 6pm"
+    }
+  ]
+}
+```
+
+**Backend Logic:** Deterministic; no AI, no LLM. See ADR 003. Uses `PrepFeasibilityValidator` domain service.
+
+**Cache:** 60s in-memory cache keyed by content hash of the draft + preferences.
+
+---
+
+### `save_prep_schedule`
+
+Persist a validated prep schedule and its tasks in a single transaction.
+
+**Input:**
+```json
+{
+  "household_id": "uuid",
+  "draft": { /* PrepSchedule object with Tasks */ },
+  "workflow_id": "uuid",
+  "metadata": {
+    "generated_by_agents": ["meal_prep_optimizer"],
+    "generation_timestamp": "2026-08-16T10:00:00Z"
+  }
+}
+```
+
+**Output:**
+```json
+{
+  "prep_schedule_id": "uuid",
+  "status": "finalized",
+  "url": "/prep-schedules/uuid"
+}
+```
+
+**Backend Logic:** Validates structure, saves to `prep_schedules` + `prep_tasks`, logs decision event.
+
+---
+
 ## Validation Tools
 
 ### `validate_constraints`
