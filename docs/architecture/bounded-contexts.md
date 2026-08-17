@@ -197,10 +197,55 @@ This document defines the bounded contexts of the AI Meal Prep Planner domain. E
 - Reheating instructions
 
 **Aggregate Roots:**
-- `PrepSchedule` — the weekly prep plan
-- `PrepTask` — individual batch prep task
+
+`PrepSchedule` — the weekly prep plan.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `Id` | UUID | PK |
+| `MealPlanId` | UUID | FK → MealPlan being scheduled |
+| `HouseholdId` | UUID | FK → Household |
+| `WeekStartDate` | DATE | Monday of the prep week |
+| `Status` | enum | `draft`, `feasibility_checked`, `finalized`, `archived` |
+| `Tasks` | ICollection\<PrepTask\> | Child entities |
+| `WorkflowId` | UUID? | OpenClaw workflow that generated this |
+| `Version` | INT | Optimistic concurrency |
+| `CreatedAt` / `UpdatedAt` | TIMESTAMPTZ | Audit timestamps |
+
+Factory methods:
+- `PrepSchedule.CreateDraft(mealPlanId, householdId, weekOf)` — creates a `draft` schedule with no tasks.
+- `Finalize()` — transitions to `finalized` after feasibility validation passes.
+- `Archive()` — transitions to `archived`; schedule is read-only.
+
+`PrepTask` — individual batch prep task (child of `PrepSchedule`).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `Id` | UUID | PK |
+| `PrepScheduleId` | UUID | FK → PrepSchedule (CASCADE delete) |
+| `RecipeId` | UUID | FK → Recipe being prepped |
+| `DayOfWeek` | VARCHAR(10) | Which day the prep happens |
+| `MealType` | VARCHAR(20) | Breakfast, lunch, dinner, snack |
+| `BatchSizeServings` | INT | How many servings this batch produces |
+| `EarliestStartOffset` | INT | Minutes from week_start_date |
+| `LatestFinishOffset` | INT | Hard deadline for this task |
+| `EquipmentIds` | text[] | Required equipment IDs |
+| `Steps` | JSONB | Ordered prep steps |
+| `AssignedToSlotIds` | UUID[] | Links to meal_slots.id |
+
+**Domain Events:**
+- `PrepScheduleDraftCreated`
+- `PrepScheduleFeasibilityChecked` (carries violation count)
+- `PrepScheduleFinalized`
+- `PrepScheduleArchived`
 
 **AI Agent:** Meal Prep Optimizer
+
+**Determinism boundary (2026-08-16):**
+The Meal Prep Optimizer agent is creative-only — it proposes draft schedules and iterates on violations. The `PrepFeasibilityValidator` is a deterministic C# domain service that evaluates feasibility (equipment conflicts, time overlaps, food safety). The agent calls `validate_prep_schedule` and refines the draft up to a configurable max-attempts. See ADR 003 ("AI does not own business logic").
+
+**Anti-corruption layer:**
+Meal Prep reads `MealPlan` via the application-service snapshot (does not query `meal_plans` table directly), consistent with the rest of the doc.
 
 **Integration Points:**
 - Reads finalized meal plans

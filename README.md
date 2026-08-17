@@ -40,7 +40,12 @@ cd src && dotnet ef database update --project MealPrepPlanner.Dal --startup-proj
 # 4. (Future) Run the API
 cd src/Api && dotnet run
 
-# 5. Run tests
+# 5. View the project board
+#    https://github.com/users/Crowbar90/projects/2
+#    Active iteration: "Cooking optimization (next)" — Pantry + Shopping/cost
+#    are deferred; the next iteration focuses on the Meal Prep bounded context.
+
+# 6. Run tests
 dotnet test src/MealPrepPlanner.slnx
 ```
 
