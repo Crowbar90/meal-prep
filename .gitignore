@@ -64,5 +64,10 @@ venv/
 .venv/
 node_modules/
 
-# Worktrees (see AGENTS.md § Workflow)
+# Nix / devshell artifacts
+.direnv/
+result
+
+# Git worktrees
 .worktrees/
+
