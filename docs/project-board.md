@@ -12,9 +12,9 @@ Use the default `Status` field exactly as GitHub ships it. No custom workflow fi
 | --- | --- |
 | **Todo** | Triaged. Has labels, an assignee if appropriate, and a slice/component. Ready to pick up. |
 | **In Progress** | Someone is actively working it. A branch and PR should exist or be imminent. |
-| **Done** | PR merged and the worktree + branch cleaned up per `AGENTS.md § Workflow`. |
+| **Done** | PR merged. |
 
-PRs auto-link from the branch name (`feat/<issue>-<slug>`) via the closing keyword in the PR body (e.g. `Closes #5`). The `Linked pull requests` field on each issue fills in once the PR opens.
+The PR's closing keyword (e.g. `Closes #5`) is what wires the issue to the board. The `Linked pull requests` field on each issue fills in once the PR opens.
 
 ## Sub-issues
 
@@ -69,10 +69,10 @@ A single-select `Iteration` field was added to the project on 2026-08-16. It tra
 ## Workflow
 
 1. **Triage.** Open the issue, add the `slice:*` label and one or more `component:*` labels, set Status to `Todo`.
-2. **Pick up.** Move Status to `In Progress` when you create the worktree (`feat/<issue>-<slug>`).
+2. **Pick up.** Move Status to `In Progress` when you open the branch / PR.
 3. **Review.** The PR auto-links; leave Status as `In Progress` until it merges.
-4. **Done.** Once the PR merges, the worktree + branch are cleaned up (see `AGENTS.md § Workflow`). Status flips to `Done` manually.
+4. **Done.** Once the PR merges, Status flips to `Done` manually.
 
 ## Why so few custom fields
 
-The `coder` and `docs-writer` agents don't have a generic "create single-select field" verb available in the GitHub MCP; iteration fields are the only new-field option. We adopted an `Iteration` field on 2026-08-16 to track time-boxed slices (Cooking optimization vs. deferred Pantry + Shopping/cost). Beyond that, the default `Status` + Labels combo remains sufficient — we keep the board lean and avoid custom fields that can't be programmatically managed.
+The `docs-writer` agent doesn't have a generic "create single-select field" verb available in the GitHub MCP; iteration fields are the only new-field option. We adopted an `Iteration` field on 2026-08-16 to track time-boxed slices (Cooking optimization vs. deferred Pantry + Shopping/cost). Beyond that, the default `Status` + Labels combo remains sufficient — we keep the board lean and avoid custom fields that can't be programmatically managed.

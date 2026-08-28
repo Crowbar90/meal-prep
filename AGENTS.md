@@ -1,64 +1,5 @@
 # AGENTS.md
 
-## Workflow
-
-**Every non-planning task runs on a git worktree.** No agent (human or AI) commits directly to `main`.
-
-### Why
-
-Worktrees keep the working tree on `main` clean and isolate in-progress work. They also make reviews trivial: each PR maps to one branch, one worktree, and one lifecycle.
-
-### Process
-
-1. **Branch from `main`.** Each issue gets its own branch.
-   - Branch name: `feat/<issue>-<slug>` (e.g. `feat/5-aspire-migrate`).
-   - Issue number first, so the project board can link branch ⇄ issue with no mapping table.
-2. **Worktree path:** `.worktrees/<slug>/` inside the repo (e.g. `.worktrees/aspire-migrate/`).
-   - The directory is per-repo and ignored by Git (see `.gitignore`).
-   - Create the worktree with `git worktree add .worktrees/<slug> -b feat/<issue>-<slug> main`.
-3. **Do the work in the worktree.** All commits, builds, and tests happen there.
-4. **Open a PR against `main`.** One PR per branch. Use the GitHub MCP (`create_pull_request`) — never `gh` from agents.
-5. **After merge, clean up:**
-   - `git worktree remove .worktrees/<slug>`
-   - `git branch -d feat/<issue>-<slug>` (locally)
-   - `git push origin --delete feat/<issue>-<slug>`
-6. **Planes of work:**
-   - `plan` mode (read-only): skip the worktree rule. Planning happens on `main` so the user sees a single coherent state.
-   - All other modes: worktree required.
-
-### Exceptions
-
-- Documentation-only edits that are unambiguously safe and pre-approved by the user can be done on `main`. Default to the worktree rule unless the user says otherwise.
-- Hotfixes on a deployed branch (none today) follow the same worktree rule against the affected branch.
-
-### GitHub CLI exception
-
-The `gh` CLI is generally **forbidden** for agents — the GitHub MCP (`mcp__github__*`) is the default. There is exactly one allowed exception, scoped tightly:
-
-- `gh api repos/{owner}/{repo}/milestones*` — listing, creating, updating, and deleting milestones. The GitHub MCP does not expose `create_milestone` / `update_milestone`; until it does, milestone administration is the one job that has to use `gh api` directly.
-- This exception is owned by the `git-helper` agent. It is **not** a blanket `gh` permission. No other agent (including `coder`) should run `gh` commands.
-
-Anything else — opening PRs, listing issues, comments, labels, project board, etc. — must go through the MCP.
-
-### On-session-startup worktree sweep
-
-To avoid the "user has to tell the agent the PR was merged" round-trip, every new agent session runs a small sweep *before* doing any other work:
-
-1. `git fetch origin`
-2. `git worktree list` — enumerate local worktrees
-3. For each worktree whose branch has been deleted on origin (e.g. after PR merge via the GitHub UI's "Delete branch" button), remove the worktree (`git worktree remove <path>`) and the local branch (`git branch -d <branch>`).
-4. If a PR's remote branch is still alive but the PR was merged, the remote branch gets auto-deleted by GitHub on merge → step 3 catches it on the next sweep.
-
-This sweep runs once per session, costs one `git fetch`, and removes the merge-to-cleanup latency.
-
-### Where the rule is enforced
-
-- This file (`AGENTS.md § Workflow`) is the single source of truth.
-- Agent prompts in `.opencode/agents/` reference this section with a one-liner rather than restating the rule.
-- The `git-helper` agent owns the worktree lifecycle commands, the `gh api /milestones` exception, and the on-session-startup sweep. The `coder` agent does not run `git` or `gh` directly; it delegates everything related to these rules to `git-helper`.
-
----
-
 ## Repo state (important)
 
 Design-phase repo — **no app code beyond the domain model and the Aspire scaffold**. What exists:
@@ -74,12 +15,23 @@ Design-phase repo — **no app code beyond the domain model and the Aspire scaff
 - `src/Directory.Build.props` — C# build config; pins `net10.0` / C# 14 / warnings-as-errors for all projects under `src/` (tests import it via `tests/Directory.Build.props`)
 - `.github/workflows/pr-build-test.yml` — PR + main pipeline: restore, format check, build, test. Single job `build-and-test`; greppable from the GitHub branch-protection UI
 - `docs/architecture/` and `docs/decisions/` — design docs and ADRs for planned behavior
-- `.opencode/` — opencode development agents (subagents + `coder` primary)
+- `.opencode/` — opencode development subagents; the default primary agent is opencode's built-in `build`
 - `.editorconfig` — formatting rules (injected into every opencode session via `opencode.json`)
 - `.gitignore` — ignores .NET build output (`bin/`, `obj/`), IDE/OS files
-- `README.md` — describes the *aspirational* full stack; `infrastructure/`, web/app projects, and a separate `Integration/` test project are planned but do not exist. Its quick-start commands (`nix develop`, `dotnet ef`, `dotnet run` from `src/Api`) cannot run yet. The Aspire AppHost step **does** work today and boots both an empty dashboard and a Postgres 18 container; on NixOS it additionally needs `programs.nix-ld.enable = true` (see the Local dev note below).
+- `README.md` — describes the *aspirational* full stack; `infrastructure/`, web/app projects, and a separate `Integration/` test project are planned but do not exist. Its quick-start commands (`nix develop`, `dotnet ef`, `dotnet run` from `src/Api`) cannot run yet. The Aspire AppHost step **does** work today and boots both an empty dashboard and a Postgres 18 container.
+- `flake.nix` — Nix devshell (consumed by `nix develop`); see "Local dev" below for what's in it and the NixOS-specific prerequisites.
 
 > **Test coverage in CI is intentionally deferred.** The test project pins `xunit.v3` 3.2.2 which bundles Microsoft Testing Platform v1 (`xunit.v3.mtp-v1`); the supported coverage extensions (`Microsoft.Testing.Extensions.CodeCoverage` 18.x, `coverlet.MTP`) require MTP v2 / .NET 10 only, and adopt xunit.v3 `xunit.v3.mtp-v2`. Adding coverage therefore means a framework bump (prerelease at time of writing). Tracked separately; revisit when xunit.v3 ships an MTP v2-compatible stable or when `Integration/` tests land and force the question.
+
+Enter the devshell (provides the .NET SDK and Podman, exports `DOTNET_ROOT`):
+
+```sh
+nix develop
+```
+
+> The test project is an MTP executable (`xunit.v3`) and the AppHost is a native .NET apphost (`Aspire.AppHost.Sdk`); both need `DOTNET_ROOT` exported on NixOS or the native apphost cannot find the runtime. The devshell does this for you.
+>
+> Aspire on NixOS additionally needs `programs.nix-ld.enable = true` so the `dcp` orchestrator and dashboard binaries can dynamically link against `glibc` — see `https://nix.dev/permalink/stub-ld`. CI runs on `ubuntu-latest` and is not affected. The AppHost also needs a running container runtime (Podman, supplied by the devshell) to bring up the Postgres 18 container. There is no lint/typecheck command beyond `dotnet format` (reliable for whitespace, but it silently skips the two .editorconfig IDE style rules — verify those manually when editing).
 
 Build and test:
 
@@ -97,8 +49,6 @@ dotnet run --project src/MealPrepPlanner.AppHost
 > The AppHost prints the dashboard URL on stdout. Today the graph contains
 > the `postgres` container resource (Postgres 18 → `mealprep` database); no
 > runnable services are registered yet.
-
-The test project is an MTP executable (`xunit.v3`) and the AppHost is a native .NET apphost (`Aspire.AppHost.Sdk`); both need `DOTNET_ROOT` exported on this NixOS machine or the native apphost cannot find the runtime. **Aspire on NixOS additionally needs `programs.nix-ld.enable = true`** so the `dcp` orchestrator and dashboard binaries can dynamically link against `glibc` — see `https://nix.dev/permalink/stub-ld`. CI runs on `ubuntu-latest` and is not affected. There is no lint/typecheck command beyond `dotnet format` (reliable for whitespace, but it silently skips the two .editorconfig IDE style rules — verify those manually when editing).
 
 ## Documentation is the source of truth
 
