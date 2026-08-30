@@ -16,10 +16,14 @@ public sealed record Preferences
         int maxCookingTimeMinutes = 60,
         Money? weeklyBudget = null,
         IReadOnlyList<string>? preferredSupermarkets = null,
-        FoodPreferences? foodPreferences = null)
+        FoodPreferences? foodPreferences = null,
+        int foodSafetyWindowHours = 72)
     {
         if (maxCookingTimeMinutes <= 0)
             throw new ArgumentOutOfRangeException(nameof(maxCookingTimeMinutes), "Max cooking time must be positive.");
+
+        if (foodSafetyWindowHours <= 0)
+            throw new ArgumentOutOfRangeException(nameof(foodSafetyWindowHours), "Food-safety window must be a positive number of hours.");
 
         DietaryRestrictions = dietaryRestrictions ?? [];
         NutritionGoals = nutritionGoals ?? NutritionalGoals.CreateDefault();
@@ -28,6 +32,7 @@ public sealed record Preferences
         WeeklyBudget = weeklyBudget ?? Money.Zero("EUR");
         PreferredSupermarkets = preferredSupermarkets ?? [];
         FoodPreferences = foodPreferences ?? FoodPreferences.Empty;
+        FoodSafetyWindowHours = foodSafetyWindowHours;
     }
 
     public IReadOnlyList<DietaryRestriction> DietaryRestrictions { get; }
@@ -43,4 +48,6 @@ public sealed record Preferences
     public IReadOnlyList<string> PreferredSupermarkets { get; }
 
     public FoodPreferences FoodPreferences { get; }
+
+    public int FoodSafetyWindowHours { get; }
 }
