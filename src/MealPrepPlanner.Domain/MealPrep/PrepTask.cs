@@ -1,65 +1,115 @@
 namespace MealPrepPlanner.Domain.MealPrep;
 
+using MealPrepPlanner.Domain.MealPlanning;
 using MealPrepPlanner.Domain.Shared;
-using MealPrepPlanner.Domain.UserPreferences;
 
 /// <summary>
 /// A single batch-cooking or prep step within a <see cref="PrepSchedule"/>.
-/// Child entity, mutated only through the schedule aggregate.
+/// Child entity of the <see cref="PrepSchedule"/> aggregate; only mutated
+/// through the aggregate root. Persisted as <c>prep_tasks</c> per
+/// <c>docs/architecture/data-model.md</c>.
 /// </summary>
 public class PrepTask : Entity
 {
-    private readonly List<string> _recipesUsing = [];
-    private readonly List<Equipment> _equipmentNeeded = [];
+    private readonly List<string> _equipmentIds = [];
+    private readonly List<Guid> _assignedToSlotIds = [];
 
     private PrepTask()
     {
-        Description = string.Empty;
+        RecipeId = Guid.Empty;
+        DayOfWeek = DayOfWeek.Monday;
+        MealType = MealType.Dinner;
+        Steps = [];
     }
 
     internal PrepTask(
         Guid id,
-        DayOfWeek day,
-        string description,
-        int durationMinutes,
-        string? reheatingInstructions)
+        Guid recipeId,
+        DayOfWeek dayOfWeek,
+        MealType mealType,
+        int batchSizeServings,
+        int earliestStartOffsetMinutes,
+        int latestFinishOffsetMinutes,
+        IReadOnlyList<string>? equipmentIds = null,
+        IReadOnlyList<PrepStepDocument>? steps = null,
+        IReadOnlyList<Guid>? assignedToSlotIds = null)
         : base(id)
     {
-        Day = day;
-        Description = description;
-        DurationMinutes = durationMinutes;
-        ReheatingInstructions = reheatingInstructions;
+        if (recipeId == Guid.Empty)
+            throw new ArgumentException("Recipe id must not be empty.", nameof(recipeId));
+
+        if (batchSizeServings <= 0)
+            throw new ArgumentOutOfRangeException(nameof(batchSizeServings), "Batch size must be a positive number of servings.");
+
+        if (earliestStartOffsetMinutes < 0)
+            throw new ArgumentOutOfRangeException(nameof(earliestStartOffsetMinutes), "Earliest start offset must be non-negative.");
+
+        if (latestFinishOffsetMinutes < earliestStartOffsetMinutes)
+            throw new ArgumentOutOfRangeException(
+                nameof(latestFinishOffsetMinutes),
+                $"Latest finish ({latestFinishOffsetMinutes}m) must be at or after earliest start ({earliestStartOffsetMinutes}m).");
+
+        RecipeId = recipeId;
+        DayOfWeek = dayOfWeek;
+        MealType = mealType;
+        BatchSizeServings = batchSizeServings;
+        EarliestStartOffsetMinutes = earliestStartOffsetMinutes;
+        LatestFinishOffsetMinutes = latestFinishOffsetMinutes;
+        Steps = (steps ?? []).ToList();
+
+        _equipmentIds.AddRange((equipmentIds ?? []).Where(s => !string.IsNullOrWhiteSpace(s)));
+        _assignedToSlotIds.AddRange(assignedToSlotIds ?? []);
     }
 
-    public DayOfWeek Day { get; }
+    public Guid RecipeId { get; }
 
-    public string Description { get; }
+    public DayOfWeek DayOfWeek { get; }
 
-    public IReadOnlyList<string> RecipesUsing => _recipesUsing;
+    public MealType MealType { get; }
 
-    public int DurationMinutes { get; }
+    public int BatchSizeServings { get; }
 
-    public IReadOnlyList<Equipment> EquipmentNeeded => _equipmentNeeded;
+    public int EarliestStartOffsetMinutes { get; }
 
-    public string? ReheatingInstructions { get; }
+    public int LatestFinishOffsetMinutes { get; }
+
+    public IReadOnlyList<string> EquipmentIds => _equipmentIds;
+
+    public IReadOnlyList<PrepStepDocument> Steps { get; }
+
+    public IReadOnlyList<Guid> AssignedToSlotIds => _assignedToSlotIds;
+
+    public TimeWindow Window => new(EarliestStartOffsetMinutes, LatestFinishOffsetMinutes);
 
     public static PrepTask Create(
-        DayOfWeek day,
-        string description,
-        int durationMinutes,
-        IReadOnlyList<string>? recipesUsing = null,
-        IReadOnlyList<Equipment>? equipmentNeeded = null,
-        string? reheatingInstructions = null)
-    {
-        if (string.IsNullOrWhiteSpace(description))
-            throw new ArgumentException("Prep task description must not be empty.", nameof(description));
-
-        if (durationMinutes <= 0)
-            throw new ArgumentOutOfRangeException(nameof(durationMinutes), "Duration must be a positive number.");
-
-        var task = new PrepTask(Guid.NewGuid(), day, description, durationMinutes, reheatingInstructions);
-        task._recipesUsing.AddRange(recipesUsing ?? []);
-        task._equipmentNeeded.AddRange(equipmentNeeded ?? []);
-        return task;
-    }
+        Guid recipeId,
+        DayOfWeek dayOfWeek,
+        MealType mealType,
+        int batchSizeServings,
+        int earliestStartOffsetMinutes,
+        int latestFinishOffsetMinutes,
+        IReadOnlyList<string>? equipmentIds = null,
+        IReadOnlyList<PrepStepDocument>? steps = null,
+        IReadOnlyList<Guid>? assignedToSlotIds = null) =>
+        new(
+            Guid.NewGuid(),
+            recipeId,
+            dayOfWeek,
+            mealType,
+            batchSizeServings,
+            earliestStartOffsetMinutes,
+            latestFinishOffsetMinutes,
+            equipmentIds,
+            steps,
+            assignedToSlotIds);
 }
+
+/// <summary>
+/// One ordered step in a prep task (e.g. "Dice onions", "Bake at 180C for
+/// 25 minutes"). Persisted as JSONB inside <c>prep_tasks.steps</c>.
+/// </summary>
+public sealed record PrepStepDocument(
+    int Order,
+    string Description,
+    int? DurationMinutes = null,
+    string? EquipmentId = null);

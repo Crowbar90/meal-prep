@@ -2,6 +2,7 @@ namespace MealPrepPlanner.Dal;
 
 using MealPrepPlanner.Dal.Entities.Audit;
 using MealPrepPlanner.Dal.Entities.MealPlanning;
+using MealPrepPlanner.Dal.Entities.MealPrep;
 using MealPrepPlanner.Dal.Entities.Pantry;
 using MealPrepPlanner.Dal.Entities.Recipes;
 using MealPrepPlanner.Dal.Entities.Shopping;
@@ -52,6 +53,11 @@ public class MealPrepDbContext : DbContext
     public DbSet<SupermarketEntity> Supermarkets => Set<SupermarketEntity>();
 
     public DbSet<SupermarketPriceEntity> SupermarketPrices => Set<SupermarketPriceEntity>();
+
+    // Meal Prep
+    public DbSet<PrepScheduleEntity> PrepSchedules => Set<PrepScheduleEntity>();
+
+    public DbSet<PrepTaskEntity> PrepTasks => Set<PrepTaskEntity>();
 
     // Audit
     public DbSet<DecisionEventEntity> DecisionEvents => Set<DecisionEventEntity>();
